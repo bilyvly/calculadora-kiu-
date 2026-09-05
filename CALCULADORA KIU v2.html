@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KIU RES · Calculadora de carga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#0B1420; --panel:#121F30; --panel-2:#182740; --border:#25384E; --text:#EAF0F6; --text-dim:#8CA0B4; --amber:#F5A623; --amber-dim:#C9860C; --teal:#4FD8CE; --danger:#E8590C; --radius:14px; }
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{ background: radial-gradient(1200px 600px at 15% -10%, #142238 0%, transparent 60%), radial-gradient(900px 500px at 100% 0%, rgba(79,216,206,0.06), transparent 60%), radial-gradient(900px 500px at 0% 100%, rgba(245,166,35,0.05), transparent 55%), var(--bg); color:var(--text); font-family:'Inter',system-ui,-apple-system,sans-serif; min-height:100vh; display:flex; justify-content:center; -webkit-font-smoothing:antialiased; }
+  .app{ width:100%; max-width:440px; min-height:100vh; display:flex; flex-direction:column; padding-bottom:24px; }
+  .header{ padding:22px 20px 0; }
+  .brand{ display:flex; align-items:baseline; gap:8px; }
+  .brand .mark{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:21px; letter-spacing:0.01em; }
+  .brand .mark span{color:var(--amber);}
+  .brand .sub{ font-size:12px; color:var(--text-dim); }
+  .subtitle{ font-size:13px; color:var(--text-dim); margin-top:3px; }
+  
+  .rate-strip{ margin:16px 20px 0; background:var(--panel-2); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .rate-strip .rate-info{display:flex;flex-direction:column;gap:2px;}
+  .rate-strip .rate-label{font-size:11.5px;color:var(--text-dim);}
+  .rate-strip .rate-value{ font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:600; color:var(--amber); letter-spacing:0.01em; }
+  .rate-strip .rate-updated{font-size:10.5px;color:var(--text-dim);margin-top:2px;}
+  .rate-edit-btn{ background:transparent; border:1px solid var(--border); color:var(--text); border-radius:9px; padding:8px 12px; font-size:12px; font-family:inherit; font-weight:600; cursor:pointer; background: var(--panel); transition: all 0.2s; }
+  .rate-edit-btn:active{background:var(--border);}
+  
+  .rate-editor{display:none;margin-top:12px;gap:8px;flex-direction:column;}
+  .rate-editor.open{display:flex; margin: 12px 20px 0;}
+  .rate-editor input{ background:var(--panel); border:1px solid var(--border); color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:17px; border-radius:9px; padding:10px 12px; width:100%; }
+  .rate-editor .row{display:flex;gap:8px;}
+  .btn-mini{ flex:1; border-radius:9px; padding:9px 10px; font-size:13px; font-family:inherit; font-weight:600; border:1px solid var(--border); background:transparent; color:var(--text-dim); cursor:pointer; transition: background 0.2s; }
+  .btn-mini:active{background:var(--border);}
+  .btn-mini.primary{background:var(--amber);border-color:var(--amber);color:#1A1206;}
+  .btn-mini.primary:active{background:var(--amber-dim);border-color:var(--amber-dim);}
+
+  .progress-wrap{padding:18px 20px 0;}
+  .progress-track{height:3px;background:var(--border);border-radius:3px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--amber);width:12%;transition:width .3s ease;}
+  .back-row{ display:flex; align-items:center; min-height:22px; margin-top:12px; }
+  .back-btn{ background:none;border:none;color:var(--text-dim); font-family:inherit;font-size:13px;cursor:pointer; padding:2px 0;display:flex;align-items:center;gap:4px; transition: color 0.2s; }
+  .back-btn:hover{color:var(--text);}
+  
+  .card-wrap{padding:6px 20px 0;flex:1;}
+  .card{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:20px 18px 18px; }
+  .q-title{ font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:600; margin:0 0 4px; }
+  .q-hint{font-size:12.5px;color:var(--text-dim);margin:0 0 16px;line-height:1.45;}
+
+  .option{ width:100%; text-align:left; background:var(--panel-2); border:1px solid var(--border); color:var(--text); border-radius:12px; padding:14px 14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; font-family:inherit; font-size:14.5px; cursor:pointer; transition:border-color .15s ease, background .15s ease; }
+  .option .opt-main{display:flex;flex-direction:column;gap:2px;}
+  .option .opt-title{font-weight:600;}
+  .option .opt-sub{font-size:12px;color:var(--text-dim);font-weight:400;}
+  .option .chev{color:var(--text-dim);font-size:16px;margin-left:8px;}
+  .option:active, .option.selected{border-color:var(--amber);background:#1E2E46;}
+
+  .field{margin-bottom:16px;}
+  .field label{ display:block;font-size:12.5px;color:var(--text-dim);margin-bottom:7px; }
+  .num-input-wrap{position:relative;}
+  .num-input-wrap input{ width:100%; background:var(--panel-2); border:1px solid var(--border); color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:20px; border-radius:12px; padding:14px 52px 14px 14px; transition: outline 0.2s; }
+  .num-input-wrap input:focus{outline:2px solid var(--amber);outline-offset:1px;}
+  .num-input-wrap .unit{ position:absolute;right:14px;top:50%;transform:translateY(-50%); font-size:13px;color:var(--text-dim); }
+
+  .check-row{ display:flex;align-items:flex-start;gap:10px; background:var(--panel-2);border:1px solid var(--border); border-radius:12px;padding:13px 14px;margin-bottom:10px;cursor:pointer; transition: border-color 0.2s;}
+  .check-row.checked{border-color:var(--amber);}
+  .check-box{ width:19px;height:19px;border-radius:5px;border:1.5px solid var(--text-dim); flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center; font-size:12px;color:transparent; transition: all 0.2s;}
+  .check-row.checked .check-box{background:var(--amber);border-color:var(--amber);color:#1A1206;}
+  .check-text .opt-title{font-weight:600;font-size:14px;}
+  .check-text .opt-sub{font-size:12px;color:var(--text-dim);margin-top:1px;}
+  .sub-field{margin:10px 0 0 29px;}
+
+  .primary-btn{ width:100%; background:var(--amber); color:#1A1206; border:none; border-radius:12px; padding:15px; font-family:inherit; font-weight:700; font-size:14.5px; cursor:pointer; margin-top:6px; display:flex; justify-content:center; align-items:center; transition: background 0.2s;}
+  .primary-btn:active{background:var(--amber-dim);}
+
+  .ticket{ margin:6px 20px 0; background:var(--panel); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+  .ticket-head{ background:var(--panel-2); padding:16px 20px; display:flex; justify-content:space-between; align-items:flex-start; }
+  .ticket-head .route{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;}
+  .perf{ position:relative;height:1px;background:transparent; border-top:2px dashed var(--border);margin:0 0; }
+  .perf::before,.perf::after{ content:"";position:absolute;top:-9px;width:18px;height:18px; border-radius:50%;background:var(--bg); }
+  .perf::before{left:-9px;} .perf::after{right:-9px;}
+  
+  .ticket-body{padding:18px 20px 4px;}
+  .line-item{display:flex;justify-content:space-between;align-items:flex-start;font-size:13.5px;padding:6px 0;color:var(--text-dim);gap:10px;}
+  .line-item .lbl{flex:1;}
+  .line-item .amt{font-family:'IBM Plex Mono',monospace;color:var(--text);}
+  .line-item.subtotal-line{color:var(--text);font-weight:600;}
+  .line-item.subtotal-line .amt{color:var(--amber);}
+  .group-heading{ font-size:11.5px;color:var(--amber);text-transform:uppercase; letter-spacing:0.04em;font-weight:700;margin:12px 0 6px; }
+  .divider{border-top:1px solid var(--border);margin:8px 0;}
+  .divider.dashed { border-top: 2px dashed var(--border); margin: 16px 0; }
+  .total-block{padding:8px 0 0;}
+  .total-label{font-size:12.5px;color:var(--text-dim);}
+  .total-usd{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;color:var(--amber);margin-top:2px;}
+  .total-bs{font-family:'IBM Plex Mono',monospace;font-size:14.5px;color:var(--text-dim);margin-top:4px;}
+  
+  /* Ajuste de diseño para el desglose */
+  .total-breakdown { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 6px; }
+  .breakdown-item { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-dim); }
+  .breakdown-item .bd-amt { font-family: 'IBM Plex Mono', monospace; color: var(--text); }
+  .breakdown-item .bd-bs { opacity: 0.65; font-size: 10.5px; margin-left: 6px; }
+
+  .command-block { margin-top: 20px; margin-bottom: 4px; }
+  .command-heading { font-size:11px;color:var(--text-dim);text-transform:uppercase; letter-spacing:0.04em;font-weight:600;margin:2px 0 4px; }
+  .command-box { background: #060B12; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 6px; }
+  .command-box code { font-family: 'IBM Plex Mono', monospace; color: var(--teal); font-size: 11.5px; word-break: break-all; line-height: 1.4; }
+  .copy-btn { background: var(--panel-2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 12px; font-family: inherit; font-weight: 600; font-size: 11px; cursor: pointer; flex: none; transition: all 0.2s ease; min-width: 74px; text-align: center; }
+  .copy-btn:active { background: var(--border); }
+  .copy-btn.copied { background: var(--teal); color: #0B1420; border-color: var(--teal); }
+
+  .result-actions{display:flex;flex-direction:column;gap:10px;padding:16px 20px 0;}
+  .result-actions .row-actions { display: flex; gap: 10px; }
+  .ghost-btn{ flex:1; background:transparent;border:1px solid var(--border);color:var(--text-dim); border-radius:12px;padding:15px 16px;font-family:inherit;font-size:14px;cursor:pointer; display:flex; justify-content:center; align-items:center; transition: background 0.2s, color 0.2s;}
+  .ghost-btn:active { background: var(--panel); color: var(--text); }
+
+  .footer-links { text-align: center; font-size: 11px; color: var(--text-dim); margin: 24px 20px 0; padding-top: 16px; border-top: 1px solid var(--border); }
+  .footer-links a { color: var(--teal); text-decoration: none; margin: 0 6px; font-weight: 500; }
+  .footer-links a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="header">
+    <div class="brand"><span class="mark">KIU · <span>RES</span></span></div>
+    <div class="subtitle">Calculadora de carga y equipaje</div>
+  </div>
+
+  <div class="rate-strip" id="rateStrip">
+    <div class="rate-info">
+      <div class="rate-label">Tasa del día (Bs/USD)</div>
+      <div class="rate-value" id="rateValue">—</div>
+      <div class="rate-updated" id="rateUpdated"></div>
+    </div>
+    <button class="rate-edit-btn" id="rateEditBtn" title="Editar tasa manualmente" type="button">Editar</button>
+  </div>
+  
+  <div class="rate-editor" id="rateEditor">
+    <div class="row">
+      <input type="number" inputmode="decimal" id="rateInput" placeholder="Ej: 813.76" step="0.01">
+    </div>
+    <div class="row">
+      <button class="btn-mini" id="rateCancelBtn" type="button">Cancelar</button>
+      <button class="btn-mini primary" id="rateSaveBtn" type="button">Guardar</button>
+    </div>
+  </div>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="back-row">
+      <button class="back-btn" id="backBtn" type="button" style="display:none;">‹ Atrás</button>
+    </div>
+  </div>
+
+  <div class="card-wrap" id="cardWrap"><div class="card" id="card"></div></div>
+  <div id="resultWrap"></div>
+
+  <div class="footer-links">
+    Fuentes cambiarias:
+    <a href="https://monitordolarvenezuela.com/" target="_blank">Monitor Dólar</a>
+    <a href="https://t.me/enparalelovzlatel" target="_blank">EnParaleloVzla</a>
+    <a href="http://www.bcv.org.ve/" target="_blank">BCV (Oficial)</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  var state = { terminal: null, flight: null, equipo: null, kg: null, piezas: null, extras: { mascota: false, especial: false, kgEspecial: null }, pago: null };
+  var screen = 'terminal';
+  var historyStack = [];
+  
+  var tasa = 813.76; 
+  var tasaUpdatedAt = null;
+  var tasaSource = 'Manual / Caché';
+
+  var cardEl = document.getElementById('card');
+  var resultWrap = document.getElementById('resultWrap');
+  var cardWrap = document.getElementById('cardWrap');
+  var progressWrap = document.getElementById('progressWrap');
+  var progressFill = document.getElementById('progressFill');
+
+  function isSameDay(isoStr) {
+    if(!isoStr) return false;
+    var d = new Date(isoStr), now = new Date();
+    return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }
+
+  function loadRate(){
+    try{ var res = localStorage.getItem('kiu_res_tasa_paralelo'); if (res){ var data = JSON.parse(res); tasa = parseFloat(data.rate) || tasa; tasaUpdatedAt = data.updatedAt; tasaSource = data.source || 'Caché'; } } catch(e){}
+    renderRateStrip();
+    
+    if (!isSameDay(tasaUpdatedAt)) {
+      document.getElementById('rateUpdated').textContent = 'Actualizando desde Monitor...';
+      fetch('https://pydolarvenezuela-api.vercel.app/api/v1/dollar?page=enparalelovzla')
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+          if(data && data.monitors && data.monitors.enparalelovzla && data.monitors.enparalelovzla.price) {
+            saveRate(data.monitors.enparalelovzla.price, true, 'EnParaleloVzla');
+          } else if (data && data.monitors && data.monitors.usd && data.monitors.usd.price) {
+            saveRate(data.monitors.usd.price, true, 'Monitor Dólar');
+          } else {
+            throw new Error("Estructura de API inválida");
+          }
+        })
+        .catch(function(err){
+          console.warn('Fallo al sincronizar tasa.', err);
+          renderRateStrip(); 
+        });
+    }
+  }
+
+  function saveRate(newRate, isAuto, source){
+    var iso = new Date().toISOString();
+    var finalSource = isAuto ? (source || 'Monitor') : 'Manual';
+    try{ localStorage.setItem('kiu_res_tasa_paralelo', JSON.stringify({rate:newRate, updatedAt: iso, source: finalSource})); } catch(e){}
+    tasa = parseFloat(newRate) || tasa; tasaUpdatedAt = iso; tasaSource = finalSource;
+    renderRateStrip(isAuto);
+  }
+
+  function renderRateStrip(wasAutoUpdated){
+    document.getElementById('rateValue').textContent = tasa.toLocaleString('es-VE', {minimumFractionDigits:2, maximumFractionDigits:2});
+    if (wasAutoUpdated) {
+      document.getElementById('rateUpdated').textContent = 'Sinc. hoy (' + tasaSource + ')';
+      document.getElementById('rateUpdated').style.color = 'var(--teal)'; 
+    } else {
+      document.getElementById('rateUpdated').textContent = tasaUpdatedAt && isSameDay(tasaUpdatedAt) ? 'Actualizada hoy (' + tasaSource + ')' : 'Valor de referencia';
+      document.getElementById('rateUpdated').style.color = 'var(--text-dim)';
+    }
+  }
+
+  loadRate();
+
+  document.getElementById('rateEditBtn').addEventListener('click', function(){
+    document.getElementById('rateInput').value = tasa;
+    document.getElementById('rateEditor').classList.add('open');
+  });
+  document.getElementById('rateCancelBtn').addEventListener('click', function(){ document.getElementById('rateEditor').classList.remove('open'); });
+  document.getElementById('rateSaveBtn').addEventListener('click', function(){
+    var v = parseFloat(document.getElementById('rateInput').value);
+    if (!isNaN(v) && v > 0) { saveRate(v, false, 'Manual'); document.getElementById('rateEditor').classList.remove('open'); }
+  });
+
+  function goTo(next){ historyStack.push(screen); screen = next; render(); }
+  function goBack(){ if (historyStack.length){ screen = historyStack.pop(); render(); } }
+  
+  function resetAll(){ 
+    state = { terminal:null, flight:null, equipo:null, kg:null, piezas:null, extras:{mascota:false, especial:false, kgEspecial:null}, pago:null }; 
+    historyStack = []; 
+    screen = 'terminal'; 
+    render(); 
+  }
+  
+  function resetSameTerminal(){
+    var currentTerminal = state.terminal;
+    state = { terminal: currentTerminal, flight: null, equipo: null, kg: null, piezas: null, extras: { mascota: false, especial: false, kgEspecial: null }, pago: null };
+    historyStack = ['terminal'];
+    screen = currentTerminal === 'nacional' ? 'nacional_kg' : 'intl_flight';
+    render();
+  }
+  
+  function calcular(){
+    var groups = [];
+    var baseTotal = 0, ivaTotal = 0, igtfTotal = 0, totalUSD = 0;
+    
+    if (state.terminal === 'nacional'){
+      var kg = parseFloat(state.kg) || 0;
+      if (kg > 0) {
+        var baseK = kg * 1; 
+        var ivaK = baseK * 0.16;
+        var igtfK = state.pago === 'usd' ? baseK * 0.03 : 0;
+        
+        groups.push({
+          tipo: 'kg', titulo: 'Kilos', 
+          items: [{label: 'Vuelo regular · ' + kg + ' kg × $1', monto: baseK}],
+          base: baseK, iva: ivaK, igtf: igtfK, 
+          kgRegularesCalc: { base: baseK, iva: ivaK, igtf: igtfK }
+        });
+        baseTotal += baseK; ivaTotal += ivaK; igtfTotal += igtfK;
+      }
+
+      var itemsE = [];
+      var baseE = 0;
+      if (state.extras.mascota){ itemsE.push({label:'Mascota (tarifa fija)', monto:50}); baseE += 50; }
+      if (state.extras.especial){
+        var kgE = parseFloat(state.extras.kgEspecial) || 0;
+        var montoE = kgE * 2;
+        itemsE.push({label:'Equipaje especial · ' + kgE + ' kg × $2', monto:montoE}); baseE += montoE;
+      }
+      
+      if (itemsE.length > 0) {
+        var ivaE = baseE * 0.16;
+        var igtfE = state.pago === 'usd' ? baseE * 0.03 : 0;
+        groups.push({
+          tipo: 'extras', titulo: 'Otros Cargos', 
+          items: itemsE, base: baseE, iva: ivaE, igtf: igtfE
+        });
+        baseTotal += baseE; ivaTotal += ivaE; igtfTotal += igtfE;
+      }
+
+    } 
+    else if (state.terminal === 'internacional') {
+      var kgI = parseFloat(state.kg) || 0;
+      if (kgI > 0) {
+        var rate = state.flight === 'habana' ? 5 : 3;
+        var baseK_I = kgI * rate;
+        var ivaK_I = baseK_I * 0.16;
+        var igtfK_I = state.pago === 'usd' ? baseK_I * 0.03 : 0;
+
+        groups.push({
+          tipo: 'kg', titulo: 'Kilos',
+          items: [{label:'Kilos · ' + kgI + ' kg × $' + rate, monto: baseK_I}],
+          base: baseK_I, iva: ivaK_I, igtf: igtfK_I,
+          kgRegularesCalc: { base: baseK_I, iva: ivaK_I, igtf: igtfK_I }
+        });
+        baseTotal += baseK_I; ivaTotal += ivaK_I; igtfTotal += igtfK_I;
+      }
+
+      var piezas = parseInt(state.piezas) || 0;
+      if (piezas > 0) {
+        var itemsP = [];
+        var baseP = 0;
+        
+        if (state.flight === 'habana'){
+          for (var i=1; i<=piezas; i++){
+            var tarifa = i===1 ? 120 : (i===2 ? 150 : 200);
+            itemsP.push({label: 'Pieza ' + i, monto: tarifa});
+            baseP += tarifa;
+          }
+        } else {
+          var tarifaPieza = state.equipo === 'E9' ? 100 : 150;
+          itemsP.push({label: piezas + ' pieza(s) · Eq ' + state.equipo + ' × $' + tarifaPieza, monto: piezas * tarifaPieza});
+          baseP += (piezas * tarifaPieza);
+        }
+
+        var ivaP = baseP * 0.16;
+        var igtfP = state.pago === 'usd' ? baseP * 0.03 : 0;
+        
+        groups.push({
+          tipo: 'piezas', titulo: 'Piezas',
+          items: itemsP, base: baseP, iva: ivaP, igtf: igtfP,
+          piezasCalc: { base: baseP, iva: ivaP, igtf: igtfP }
+        });
+        baseTotal += baseP; ivaTotal += ivaP; igtfTotal += igtfP;
+      }
+    }
+    
+    totalUSD = baseTotal + ivaTotal + igtfTotal;
+    return { groups: groups, base: baseTotal, iva: ivaTotal, igtf: igtfTotal, totalUSD: totalUSD, totalBs: totalUSD * tasa };
+  }
+
+  function render(){
+    var depths = { terminal:1, nacional_kg:2, nacional_extras:3, intl_flight:2, intl_equipo:3, intl_kg:4, intl_piezas:5, pago:6, resultado:7 };
+    progressFill.style.width = ((depths[screen] || 1)/7 * 100) + '%';
+    document.getElementById('backBtn').style.display = historyStack.length ? 'flex' : 'none';
+
+    if (screen === 'resultado'){ cardWrap.style.display = 'none'; progressWrap.style.display = 'none'; renderResult(); return; }
+    cardWrap.style.display = 'block'; progressWrap.style.display = 'block'; resultWrap.innerHTML = '';
+
+    if (screen === 'terminal') renderTerminal();
+    else if (screen === 'nacional_kg') renderNacionalKg();
+    else if (screen === 'nacional_extras') renderNacionalExtras();
+    else if (screen === 'intl_flight') renderIntlFlight();
+    else if (screen === 'intl_equipo') renderIntlEquipo();
+    else if (screen === 'intl_kg') renderIntlKg();
+    else if (screen === 'intl_piezas') renderIntlPiezas();
+    else if (screen === 'pago') renderPago();
+
+    cardEl.querySelectorAll('[data-choose]').forEach(function(btn){
+      btn.addEventListener('click', function(){ state[btn.dataset.chooseKey] = btn.dataset.choose; if (btn.dataset.next) goTo(btn.dataset.next); });
+    });
+  }
+
+  function renderTerminal(){
+    cardEl.innerHTML = '<h2 class="q-title">¿Qué terminal es?</h2>' +
+      optionBtn('Nacional', 'Vuelo regular', 'terminal', 'nacional', 'nacional_kg') +
+      optionBtn('Internacional', 'La Habana o vuelo regular', 'terminal', 'internacional', 'intl_flight'); 
+  }
+  function renderNacionalKg(){
+    cardEl.innerHTML = '<h2 class="q-title">Vuelo regular · Nacional</h2>' +
+      numField('kgInput', 'Cantidad de kg (Tarifa $1 x kg)', 'kg', state.kg) +
+      '<button class="primary-btn" id="continueBtn" type="button">Continuar</button>';
+    document.getElementById('continueBtn').addEventListener('click', function(){ 
+      var v = parseFloat(document.getElementById('kgInput').value); 
+      if (!isNaN(v) && v >= 0) { state.kg = v; goTo('nacional_extras'); } 
+    });
+  }
+  function renderNacionalExtras(){
+    cardEl.innerHTML = '<h2 class="q-title">Opciones extra</h2>' +
+      checkRow('mascotaChk', 'Mascota', 'Tarifa fija · $50', state.extras.mascota) +
+      checkRow('especialChk', 'Equipaje especial', 'Tarifa base · $2 x kg', state.extras.especial) +
+      '<div id="especialSub" class="sub-field" style="display:' + (state.extras.especial ? 'block':'none') + ';">' +
+        numField('kgEspecialInput', 'Kg de equipaje especial', 'kg', state.extras.kgEspecial) +
+      '</div><button class="primary-btn" id="continueBtn" type="button">Continuar</button>';
+    var mascotaRow = document.getElementById('mascotaChk'); var especialRow = document.getElementById('especialChk');
+    mascotaRow.addEventListener('click', function(){ state.extras.mascota = !state.extras.mascota; mascotaRow.classList.toggle('checked'); });
+    especialRow.addEventListener('click', function(){ state.extras.especial = !state.extras.especial; especialRow.classList.toggle('checked'); document.getElementById('especialSub').style.display = state.extras.especial ? 'block' : 'none'; });
+    document.getElementById('continueBtn').addEventListener('click', function(){
+      if (state.extras.especial) {
+        var v = parseFloat(document.getElementById('kgEspecialInput').value);
+        state.extras.kgEspecial = !isNaN(v) ? v : 0;
+      }
+      goTo('pago');
+    });
+  }
+  function renderIntlFlight(){
+    cardEl.innerHTML = '<h2 class="q-title">¿Qué vuelo internacional?</h2>' +
+      optionBtn('Vuelo de La Habana', 'Tarifa base por piezas/kilos', 'flight', 'habana', 'intl_kg') +
+      optionBtn('Vuelo regular', 'Tarifa base por piezas/kilos', 'flight', 'regular', 'intl_equipo');
+  }
+  function renderIntlEquipo(){
+    cardEl.innerHTML = '<h2 class="q-title">Equipo de la aeronave</h2>' +
+      optionBtn('Equipo E9', 'Maleta extra: $100', 'equipo', 'E9', 'intl_kg') +
+      optionBtn('Airbus 370 / 354', 'Maleta extra: $150', 'equipo', 'AIRBUS', 'intl_kg');
+  }
+  function renderIntlKg(){
+    var r = state.flight === 'habana' ? 5 : 3;
+    cardEl.innerHTML = '<h2 class="q-title">Kilogramos de Equipaje</h2>' +
+      '<p class="q-hint">Tarifa base: $' + r + ' por kg. Ingresa 0 si no lleva kilos extra.</p>' +
+      numField('kgInput', 'Cantidad de kg', 'kg', state.kg) +
+      '<button class="primary-btn" id="continueBtn" type="button">Continuar</button>';
+    document.getElementById('continueBtn').addEventListener('click', function(){ 
+      var v = parseFloat(document.getElementById('kgInput').value); 
+      if (!isNaN(v) && v >= 0) { state.kg = v; goTo('intl_piezas'); } 
+    });
+  }
+  function renderIntlPiezas(){
+    cardEl.innerHTML = '<h2 class="q-title">Piezas Adicionales</h2>' +
+      '<p class="q-hint">Ingresa 0 si no lleva piezas adicionales.</p>' +
+      numField('piezasInput', 'Cantidad de piezas', 'pzas', state.piezas) +
+      '<button class="primary-btn" id="continueBtn" type="button">Continuar</button>';
+    document.getElementById('continueBtn').addEventListener('click', function(){ 
+      var v = parseInt(document.getElementById('piezasInput').value); 
+      if (!isNaN(v) && v >= 0) { state.piezas = v; goTo('pago'); } 
+    });
+  }
+  function renderPago(){
+    cardEl.innerHTML = '<h2 class="q-title">Método de pago</h2>' +
+      optionBtn('Bolívares', 'Tarifa base + IVA (16%)', 'pago', 'bs', 'resultado') +
+      optionBtn('Dólares', 'Tarifa base + IVA (16%) + IGTF (3%)', 'pago', 'usd', 'resultado');
+  }
+
+  function renderResult(){
+    var r = calcular();
+    var commandHtml = '';
+    var isBs = state.pago === 'bs';
+    var mult = isBs ? tasa : 1;
+    var monedaCmd = isBs ? 'VES' : 'USD';
+    
+    var kgGroup = r.groups.find(function(g){ return g.tipo === 'kg'; });
+    var pzGroup = r.groups.find(function(g){ return g.tipo === 'piezas'; });
+
+    var kgData = kgGroup ? kgGroup.kgRegularesCalc : null;
+    var cmdKg = parseFloat(state.kg) || 0;
+    if (kgData && cmdKg > 0) {
+      var cmdBaseK = (kgData.base * mult).toFixed(2);
+      var cmdIvaK = (kgData.iva * mult).toFixed(2);
+      var cmdStringK = isBs 
+        ? 'WX*XB' + cmdKg + 'K' + cmdBaseK + monedaCmd + '*TX' + cmdIvaK + 'YN*F.MA0000111122223333/Z1234*ET/3080/E1*S1*N1' 
+        : 'WX*XB' + cmdKg + 'K' + cmdBaseK + monedaCmd + '*TX' + cmdIvaK + 'YN/' + (kgData.igtf * mult).toFixed(2) + '6D*FCA*ET/3080/E1*S1*N1';
+      commandHtml += '<div class="command-block"><div class="command-heading">Comando KIU (Solo Kilos)</div><div class="command-box"><code id="kiuCmdTextK">' + cmdStringK + '</code><button class="copy-btn" id="copyCmdBtnK" type="button">Copiar</button></div></div>';
+    }
+
+    var pzData = pzGroup ? pzGroup.piezasCalc : null;
+    var cmdPz = parseInt(state.piezas) || 0;
+    if (pzData && cmdPz > 0) {
+      var basePromediada = pzData.base / cmdPz; 
+      var cmdBaseP = (basePromediada * mult).toFixed(2);
+      var cmdIvaP = (pzData.iva * mult).toFixed(2);
+      var cmdStringP = isBs 
+        ? 'WX*XB' + cmdPz + 'P' + cmdBaseP + monedaCmd + '*TX' + cmdIvaP + 'YN*F.MA0000111122223333/Z1234*ET/3080/E1*S1*N1' 
+        : 'WX*XB' + cmdPz + 'P' + cmdBaseP + monedaCmd + '*TX' + cmdIvaP + 'YN/' + (pzData.igtf * mult).toFixed(2) + '6D*FCA*ET/3080/E1*S1*N1';
+      commandHtml += '<div class="command-block"><div class="command-heading">Comando KIU (Solo Piezas)</div><div class="command-box"><code id="kiuCmdTextP">' + cmdStringP + '</code><button class="copy-btn" id="copyCmdBtnP" type="button">Copiar</button></div></div>';
+    }
+
+    var groupsHtml = r.groups.map(function(g){
+      var titleHtml = '<div class="group-heading">' + g.titulo + '</div>';
+      var itemsHtml = g.items.map(function(it){
+        return '<div class="line-item"><span class="lbl">' + it.label + '</span><span class="amt">$' + it.monto.toFixed(2) + '</span></div>';
+      }).join('');
+      
+      var subtotalBs = (g.base * tasa).toFixed(2);
+      var ivaBs = (g.iva * tasa).toFixed(2);
+      var igtfBs = (g.igtf * tasa).toFixed(2);
+
+      var subtotalHtml = '<div class="divider" style="margin:4px 0;"></div>' +
+        '<div class="line-item subtotal-line">' +
+          '<span class="lbl">Subtotal ' + g.titulo.toLowerCase() + '</span>' +
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;">' +
+            '<span class="amt">$' + g.base.toFixed(2) + '</span>' +
+            '<span style="font-size:10.5px;color:var(--text-dim);font-weight:400;margin-top:2px;">Bs ' + subtotalBs + '</span>' +
+          '</div>' +
+        '</div>';
+                         
+      var taxesHtml = '<div class="line-item">' +
+                        '<span class="lbl">IVA (16%)</span>' +
+                        '<div style="display:flex;flex-direction:column;align-items:flex-end;">' +
+                          '<span class="amt">$' + g.iva.toFixed(2) + '</span>' +
+                          '<span style="font-size:10.5px;color:var(--text-dim);font-weight:400;margin-top:2px;">Bs ' + ivaBs + '</span>' +
+                        '</div>' +
+                      '</div>' +
+                      (state.pago === 'usd' ? 
+                      '<div class="line-item">' +
+                        '<span class="lbl">IGTF (3%)</span>' +
+                        '<div style="display:flex;flex-direction:column;align-items:flex-end;">' +
+                          '<span class="amt">$' + g.igtf.toFixed(2) + '</span>' +
+                          '<span style="font-size:10.5px;color:var(--text-dim);font-weight:400;margin-top:2px;">Bs ' + igtfBs + '</span>' +
+                        '</div>' +
+                      '</div>' : '');
+                      
+      return titleHtml + itemsHtml + subtotalHtml + taxesHtml;
+    }).join('<div class="divider dashed"></div>'); 
+
+    // Construcción del desglose sutil mejorado
+    var breakdownHtml = '';
+    if (r.groups.length > 0) {
+      var breakdownItems = r.groups.map(function(g) {
+        var groupTotalUsd = g.base + g.iva + g.igtf;
+        var groupTotalBs = groupTotalUsd * tasa;
+        return '<div class="breakdown-item">' +
+                 '<span>Total ' + g.titulo + '</span>' +
+                 '<span class="bd-amt">$' + groupTotalUsd.toFixed(2) + ' <span class="bd-bs">(Bs ' + groupTotalBs.toFixed(2) + ')</span></span>' +
+               '</div>';
+      }).join('');
+      breakdownHtml = '<div class="total-breakdown">' + breakdownItems + '</div>';
+    }
+
+    var routeDisplay = state.terminal === 'nacional' ? 'NACIONAL' : (state.flight === 'habana' ? 'INTL · LA HABANA' : 'INTL · REGULAR');
+
+    resultWrap.innerHTML =
+      '<div class="ticket"><div class="ticket-head"><div><div class="route">' + routeDisplay + '</div></div></div><div class="perf"></div>' +
+      '<div class="ticket-body">' + 
+        (r.groups.length > 0 ? groupsHtml : '<div class="line-item">Sin cargos</div>') + 
+        '<div class="divider dashed"></div>' +
+        '<div class="total-block"><div class="total-label">Total a pagar</div>' +
+        '<div class="total-usd">$' + r.totalUSD.toFixed(2) + '</div>' +
+        '<div class="total-bs">Bs ' + r.totalBs.toFixed(2) + '</div>' +
+        breakdownHtml + 
+        '</div>' +
+        commandHtml + 
+      '</div></div>' +
+      '<div class="result-actions">' +
+        '<div class="row-actions">' +
+          '<button class="ghost-btn" id="editBtn" type="button" style="flex: 0 0 35%;">‹ Atrás</button>' +
+          '<button class="primary-btn" id="sameTerminalBtn" type="button" style="flex: 1; margin:0;">Nueva carga</button>' +
+        '</div>' +
+        '<button class="ghost-btn" id="newCalcBtn" type="button" style="width:100%;">Volver al inicio</button>' +
+      '</div>';
+
+    var copyBtnK = document.getElementById('copyCmdBtnK');
+    if(copyBtnK) { copyBtnK.addEventListener('click', function(){ navigator.clipboard.writeText(document.getElementById('kiuCmdTextK').innerText); this.textContent = '¡Copiado!'; this.classList.add('copied'); setTimeout(() => { this.textContent = 'Copiar'; this.classList.remove('copied'); }, 2000); }); }
+    
+    var copyBtnP = document.getElementById('copyCmdBtnP');
+    if(copyBtnP) { copyBtnP.addEventListener('click', function(){ navigator.clipboard.writeText(document.getElementById('kiuCmdTextP').innerText); this.textContent = '¡Copiado!'; this.classList.add('copied'); setTimeout(() => { this.textContent = 'Copiar'; this.classList.remove('copied'); }, 2000); }); }
+    
+    document.getElementById('sameTerminalBtn').addEventListener('click', resetSameTerminal);
+    document.getElementById('newCalcBtn').addEventListener('click', resetAll);
+    document.getElementById('editBtn').addEventListener('click', function(){ cardWrap.style.display = 'block'; progressWrap.style.display = 'block'; goBack(); });
+  }
+
+  function optionBtn(title, sub, key, value, next){ return '<button class="option" data-choose="' + value + '" data-choose-key="' + key + '" data-next="' + next + '" type="button"><span class="opt-main"><span class="opt-title">' + title + '</span><span class="opt-sub">' + sub + '</span></span><span class="chev">›</span></button>'; }
+  function numField(id, label, unit, value){ return '<div class="field"><label>' + label + '</label><div class="num-input-wrap"><input type="number" id="' + id + '" min="0" step="0.01" value="' + (value||'') + '"><span class="unit">' + unit + '</span></div></div>'; }
+  function checkRow(id, title, sub, checked){ return '<div class="check-row' + (checked?' checked':'') + '" id="' + id + '"><span class="check-box">✓</span><span class="check-text"><span class="opt-title">' + title + '</span><br><span class="opt-sub">' + sub + '</span></span></div>'; }
+
+  document.getElementById('backBtn').addEventListener('click', goBack);
+  render();
+})();
+</script>
+</body>
+</html>
